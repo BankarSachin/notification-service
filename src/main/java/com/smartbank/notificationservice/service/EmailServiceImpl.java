@@ -40,7 +40,7 @@ public class EmailServiceImpl implements EmailService {
             future.complete(null);
 
         } catch (MessagingException | MailException e) {
-            log.error("Failed to send email to {}", to, e);
+            log.error("{} - Failed to send email to {}", to, e);
             future.completeExceptionally(e);
         }
 
