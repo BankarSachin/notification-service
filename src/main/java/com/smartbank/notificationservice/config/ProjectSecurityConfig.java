@@ -5,6 +5,7 @@ import java.util.List;
 
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.http.HttpMethod;
 import org.springframework.security.config.Customizer;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
@@ -12,9 +13,13 @@ import org.springframework.security.config.http.SessionCreationPolicy;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.web.SecurityFilterChain;
+import org.springframework.security.web.authentication.www.BasicAuthenticationFilter;
 import org.springframework.web.cors.CorsConfiguration;
 import org.springframework.web.cors.CorsConfigurationSource;
 import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
+
+import com.smartbank.notificationservice.exception.handler.GlobalAuthenticationEntryPoint;
+import com.smartbank.notificationservice.filter.JwtAuthenticationFilter;
 
 import lombok.RequiredArgsConstructor;
 
@@ -24,10 +29,14 @@ import lombok.RequiredArgsConstructor;
 public class ProjectSecurityConfig {
 
 	 private static final String[] PUBLIC_URLS = {
-	            "/v1/customer/register",
-	            "/actuator/**"
+	            "/actuator/**",
+	            "swagger-ui.html",
+	            "/v3/api-docs/**",
+	            "/swagger-ui/**"
 	    };
 	 
+	 private final GlobalAuthenticationEntryPoint globalAuthenticationEntryPoint;
+	 private final JwtAuthenticationFilter jwtAuthenticationFilter;
 	 
 	 /**
 	 * <p><b>SessionManagement</b> : Do not use Session Managment
@@ -41,41 +50,47 @@ public class ProjectSecurityConfig {
 	 * @throws Exception
 	 */
 	@Bean
-    SecurityFilterChain defaultSecurityFilterChain(HttpSecurity http) throws Exception {
+   SecurityFilterChain defaultSecurityFilterChain(HttpSecurity http) throws Exception {
 		
 		http
 			.sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
 			.cors(cors -> cors.configurationSource(corsConfigurationSource()))
 			.csrf(csrf -> csrf.disable())
 			.authorizeHttpRequests(
-					 request -> request.anyRequest().permitAll()
+					 request -> request
+					 			.requestMatchers(PUBLIC_URLS).permitAll()
+					 			.requestMatchers(HttpMethod.OPTIONS, "/**").permitAll()
+					 			.requestMatchers("/v1/notifications/*/notify").hasAnyAuthority("ADMIN")
 					)
+			.exceptionHandling(exhandler -> exhandler.authenticationEntryPoint(globalAuthenticationEntryPoint))
 			.httpBasic(Customizer.withDefaults())
 			.formLogin(formlogin -> formlogin.disable());
 	
+	 http.addFilterBefore(jwtAuthenticationFilter, BasicAuthenticationFilter.class);
 		
-     return http.build();
-    }
+    return http.build();
+   }
 	
-	/*
-	 * @Bean public PasswordEncoder passwordEncoder() { return new
-	 * BCryptPasswordEncoder(); }
-	 */
+	@Bean
+	public PasswordEncoder passwordEncoder() {
+		return new BCryptPasswordEncoder();
+	}
+	
 	/**
 	 * These configurations once fetched by browser or client valid till 3600 Seconds i.e. 1 Hour
 	 * @return
 	 */
 	@Bean
-    public CorsConfigurationSource corsConfigurationSource() {
+   public CorsConfigurationSource corsConfigurationSource() {
 		UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
-        CorsConfiguration config = new CorsConfiguration();
-        config.setAllowedOrigins(List.of("http://localhost:8080","http://localhost:8084","http://localhost:8086","http://localhost:8088")); 
-        config.setAllowedMethods(List.of("GET", "POST", "PUT","OPTIONS"));
-        config.setAllowedHeaders(List.of("*"));
-        config.setAllowedHeaders(Collections.singletonList("*"));
-        config.setExposedHeaders(Collections.singletonList("*"));
-        config.setMaxAge(3600L);
-        source.registerCorsConfiguration("/**", config);
-        return source;
-    }
+       CorsConfiguration config = new CorsConfiguration();
+       config.setAllowedOrigins(List.of("http://localhost:8080","http://localhost:8084","http://localhost:8086","http://localhost:8088")); 
+       config.setAllowedMethods(List.of("GET", "POST", "PUT","OPTIONS"));
+       config.setAllowedHeaders(List.of("*"));
+       config.setAllowedHeaders(Collections.singletonList("*"));
+       config.setExposedHeaders(Collections.singletonList("*"));
+       config.setMaxAge(3600L);
+       source.registerCorsConfiguration("/**", config);
+       return source;
+   }
 }

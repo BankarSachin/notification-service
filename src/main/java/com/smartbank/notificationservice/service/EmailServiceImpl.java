@@ -7,6 +7,7 @@ import java.util.Locale;
 import java.util.Map;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.mail.javamail.JavaMailSender;
 import org.springframework.mail.javamail.MimeMessageHelper;
 import org.springframework.retry.annotation.Backoff;
@@ -20,7 +21,7 @@ import com.smartbank.notificationservice.dto.NotificationRequest;
 import com.smartbank.notificationservice.dto.NotificationResponse;
 import com.smartbank.notificationservice.entity.external.Account;
 import com.smartbank.notificationservice.entity.external.Customer;
-import com.smartbank.notificationservice.enums.ApiMessage;
+import com.smartbank.notificationservice.enums.ApiMessages;
 import com.smartbank.notificationservice.enums.NotificationType;
 import com.smartbank.notificationservice.repository.external.AccountRepository;
 
@@ -31,6 +32,9 @@ import lombok.extern.slf4j.Slf4j;
 @Slf4j
 public class EmailServiceImpl implements EmailService {
 
+	@Value("${spring.mail.username}")
+	private String from;
+	
 	@Autowired
     private JavaMailSender mailSender;
 
@@ -65,26 +69,26 @@ public class EmailServiceImpl implements EmailService {
 			  MimeMessage message = mailSender.createMimeMessage();
 			  MimeMessageHelper helper = new MimeMessageHelper(message, true);
 			  
-			  helper.setTo("bankarsachin003@gmail.com");
-			  helper.setFrom("SachinBankar1512@gmail.com");;
+			  helper.setTo(customer.getEmail());
+			  helper.setFrom(from);
 			  final NotificationType notificationType = notificationRequest.getNotificationType();
 			  
 			  Map<String, Object> contextvars = switch (notificationType) {
 					case CREDIT: {
-						helper.setSubject(ApiMessage.MAIL_SUB_CREDIT.getValue());
-						responseText = ApiMessage.MAIL_SUB_CREDIT_RESPONSE_TEXT.getValue();
+						helper.setSubject(ApiMessages.MAIL_SUB_CREDIT.getMessage());
+						responseText = ApiMessages.MAIL_SUB_CREDIT_RESPONSE_TEXT.getMessage();
 						templateName = "cash-deposit";
 						yield fnMappper.apply(accountNumber,notificationRequest);
 					}
 					case DEBIT: {
-						helper.setSubject(ApiMessage.MAIL_SUB_DEBIT.getValue());
-						responseText = ApiMessage.MAIL_SUB_DEBIT_RESPONSE_TEXT.getValue();
+						helper.setSubject(ApiMessages.MAIL_SUB_DEBIT.getMessage());
+						responseText = ApiMessages.MAIL_SUB_DEBIT_RESPONSE_TEXT.getMessage();
 						templateName = "cash-withdrawal";
 						yield fnMappper.apply(accountNumber,notificationRequest);
 					}
 					case TRANSFER: {
-						helper.setSubject(ApiMessage.MAIL_SUB_TRANSFER.getValue());
-						responseText = ApiMessage.MAIL_SUB_TRANSFER_RESPONSE_TEXT.getValue();
+						helper.setSubject(ApiMessages.MAIL_SUB_TRANSFER.getMessage());
+						responseText = ApiMessages.MAIL_SUB_TRANSFER_RESPONSE_TEXT.getMessage();
 						templateName = "transfer-success";
 						yield fnTransferMappper.apply(accountNumber,notificationRequest);
 					}
