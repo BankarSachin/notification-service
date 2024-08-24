@@ -15,9 +15,11 @@ import org.springframework.web.bind.annotation.RestController;
 
 import com.smartbank.notificationservice.dto.NotificationRequest;
 import com.smartbank.notificationservice.dto.NotificationResponse;
+import com.smartbank.notificationservice.enums.NotificationType;
 import com.smartbank.notificationservice.service.EmailService;
 
 import jakarta.validation.Valid;
+import lombok.extern.slf4j.Slf4j;
 
 /**
  * Sends mail to given email address
@@ -26,8 +28,8 @@ import jakarta.validation.Valid;
  */
 @RestController
 @RequestMapping("/v1/")
+@Slf4j
 public class NotificationController {
-
 	@Autowired
 	private EmailService emailService;
 
@@ -37,7 +39,17 @@ public class NotificationController {
 	public ResponseEntity<NotificationResponse> notify(@RequestHeader Map<String, String> headers,
 			@PathVariable(name = "accountnumber") String accountNumber, @Valid @RequestBody NotificationRequest request)
 			throws Exception {
-		final NotificationResponse notificationResponse = emailService.sendEmail(accountNumber, request);
+		NotificationResponse notificationResponse = emailService.sendEmail(accountNumber, request);
+		log.info("notify - Transaction alert response {}",notificationResponse);
+		if(request.getNotificationType()== NotificationType.TRANSFER) {
+			NotificationRequest transferCreditAlertRequest = new NotificationRequest();
+			transferCreditAlertRequest.setNotificationType(NotificationType.CREDIT);
+			transferCreditAlertRequest.setTxnAmmount(request.getTxnAmmount());
+			transferCreditAlertRequest.setTxnDateTime(request.getTxnDateTime());
+			transferCreditAlertRequest.setCurrentBalance(request.getDestinationCurrentBalance());
+			NotificationResponse transferCreditAlertResponse = emailService.sendEmail(accountNumber, transferCreditAlertRequest);
+			log.info("notify - Transfer credit alert sent to payee {}",transferCreditAlertResponse);
+		}
 		return ResponseEntity.status(HttpStatus.OK).body(notificationResponse);
 	}
 }

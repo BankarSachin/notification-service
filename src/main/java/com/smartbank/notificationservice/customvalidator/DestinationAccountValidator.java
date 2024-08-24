@@ -14,7 +14,7 @@ public class DestinationAccountValidator implements ConstraintValidator<ValidDes
     @Override
     public boolean isValid(NotificationRequest dto, ConstraintValidatorContext context) {
         if (dto.getNotificationType() == NotificationType.TRANSFER) {
-            return dto.getDestinationAccountNumber() != null && !dto.getDestinationAccountNumber().isEmpty();
+            return dto.getDestinationAccountNumber() != null && !dto.getDestinationAccountNumber().isEmpty() && dto.getDestinationCurrentBalance()!=null;
         }
         return true;
     }

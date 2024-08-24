@@ -1,6 +1,8 @@
 package com.smartbank.notificationservice.dto;
 
+import java.math.BigDecimal;
 import java.time.LocalDateTime;
+import java.util.UUID;
 
 import com.smartbank.notificationservice.customvalidator.ValidDestinationAccount;
 import com.smartbank.notificationservice.enums.NotificationType;
@@ -17,18 +19,20 @@ public class NotificationRequest {
 	
 	private String destinationAccountNumber; 
 	
+	private BigDecimal destinationCurrentBalance;
+	
 	@NotNull
-	private String txnAmmount;
+	private BigDecimal txnAmmount;
 	
 	@NotNull
 	private LocalDateTime txnDateTime;
 	
 	@NotNull
-	private String currentBalance;
+	private BigDecimal currentBalance;
 	
 	@NotNull
 	private String customerID;
 	
 	@NotNull
-	private String utrNumber;
+	private UUID utrNumber;
 }
