@@ -21,9 +21,8 @@ import com.smartbank.notificationservice.constant.SysConstant;
 import com.smartbank.notificationservice.exception.ErrorStackTrace;
 import com.smartbank.notificationservice.exception.ExceptionCode;
 import com.smartbank.notificationservice.exception.NotificationException;
-import com.smartbank.notificationservice.exception.bean.ErrorStack;
 import com.smartbank.notificationservice.exception.bean.ErrorInfo;
-import com.smartbank.notificationservice.service.external.AuthzService;
+import com.smartbank.notificationservice.exception.bean.ErrorStack;
 import com.smartbank.notificationservice.service.external.TokenService;
 
 import io.jsonwebtoken.Claims;
@@ -47,7 +46,10 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter{
 	
 	private final TokenService tokenService;
 	
+	/**
+	 * If required.Uncomment it
 	private final AuthzService authzService;
+	*/
 	
 	@Override
 	protected void doFilterInternal(HttpServletRequest request, HttpServletResponse response, FilterChain filterChain)
@@ -78,17 +80,18 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter{
              final String customerid =  claims.getSubject();
              final String permissions = (String) claims.get("permissions");
              
+             /**
+              * No authz validation required for notification service because it is not exposed to outside world
              Optional<String> accountNumberOptional = extractAccountNumberFromPathParams(request);
              String accountNumber = accountNumberOptional.orElseThrow(()->new NotificationException(ExceptionCode.NTFS_INVALID_INPUT));
              accountNumber = sanitizeAccountNumber(accountNumber);
-             
              final boolean authz = authzService.validateAccess(customerid, accountNumber);
-             log.info("{} - Authorization check status ? {}",methodName,authz);
-             if (authz) {
-             	 Authentication auth = new UsernamePasswordAuthenticationToken(customerid, null,
-                             AuthorityUtils.commaSeparatedStringToAuthorityList(permissions));
-             	 SecurityContextHolder.getContext().setAuthentication(auth);
-     		}
+             */
+             
+             
+             log.info("{} - Authentication check successful",methodName);
+             Authentication auth = new UsernamePasswordAuthenticationToken(customerid, null,AuthorityUtils.commaSeparatedStringToAuthorityList(permissions));
+             SecurityContextHolder.getContext().setAuthentication(auth);
 		} catch (NotificationException e) {
 			log.error("{} - Error occured during JWT token validation {}", e.getMessage());
 			handleError(request, response, e); // Had to handled this way because 
@@ -99,6 +102,7 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter{
 		filterChain.doFilter(request, response);
 	}
 	
+	@SuppressWarnings("unused")
 	private Optional<String> extractAccountNumberFromPathParams(HttpServletRequest request) {
 		String pathInfo = request.getServletPath();
 	    if (pathInfo != null) {
@@ -116,6 +120,7 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter{
 	 * @param accountNumber 
 	 * @return
 	 */
+	@SuppressWarnings("unused")
 	private String sanitizeAccountNumber(String accountNumber) {
 		return accountNumber.replaceAll("[^0-9]", "");
 	}

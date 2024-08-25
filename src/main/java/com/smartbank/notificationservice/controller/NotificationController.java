@@ -13,6 +13,7 @@ import org.springframework.web.bind.annotation.RequestHeader;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
+import com.smartbank.notificationservice.constant.SysConstant;
 import com.smartbank.notificationservice.dto.NotificationRequest;
 import com.smartbank.notificationservice.dto.NotificationResponse;
 import com.smartbank.notificationservice.enums.NotificationType;
@@ -48,9 +49,12 @@ public class NotificationController {
 			transferCreditAlertRequest.setTxnDateTime(request.getTxnDateTime());
 			transferCreditAlertRequest.setCurrentBalance(request.getDestinationCurrentBalance());
 			transferCreditAlertRequest.setUtrNumber(request.getUtrNumber());
-			NotificationResponse transferCreditAlertResponse = emailService.sendEmail(accountNumber, transferCreditAlertRequest);
+			NotificationResponse transferCreditAlertResponse = emailService.sendEmail(request.getDestinationAccountNumber(), transferCreditAlertRequest);
 			log.info("notify - Transfer credit alert sent to payee {}",transferCreditAlertResponse);
 		}
-		return ResponseEntity.status(HttpStatus.OK).body(notificationResponse);
+		return ResponseEntity
+					.status(HttpStatus.OK)
+					.header(SysConstant.SYS_REQ_CORR_ID_HEADER, headers.get(SysConstant.SYS_REQ_CORR_ID_HEADER.toLowerCase()))
+					.body(notificationResponse);
 	}
 }
