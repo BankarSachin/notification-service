@@ -104,10 +104,11 @@ public class EmailServiceImpl implements EmailService {
 		      
 		      // Send the email
 		      mailSender.send(message);
-		      
+		      log.info("{} - mail sent successfully", methodName);
 		      return new NotificationResponse("Success",responseText);
 			
 		} catch (Exception e) {
+			log.info("{} - Error in mail sent {}", methodName,e.getMessage());
 			throw e;
 		}
 	}

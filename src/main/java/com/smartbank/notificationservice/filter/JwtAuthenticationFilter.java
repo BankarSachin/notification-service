@@ -103,7 +103,7 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter{
 		String pathInfo = request.getServletPath();
 	    if (pathInfo != null) {
 	        String[] parts = pathInfo.split("/");
-	        int indexOfName = List.of(parts).indexOf("transactions");
+	        int indexOfName = List.of(parts).indexOf("notifications");
 	        if (indexOfName != -1) {
 	            return Optional.of(parts[indexOfName + 1]);
 	        }

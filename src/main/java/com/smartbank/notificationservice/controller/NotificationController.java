@@ -47,6 +47,7 @@ public class NotificationController {
 			transferCreditAlertRequest.setTxnAmmount(request.getTxnAmmount());
 			transferCreditAlertRequest.setTxnDateTime(request.getTxnDateTime());
 			transferCreditAlertRequest.setCurrentBalance(request.getDestinationCurrentBalance());
+			transferCreditAlertRequest.setUtrNumber(request.getUtrNumber());
 			NotificationResponse transferCreditAlertResponse = emailService.sendEmail(accountNumber, transferCreditAlertRequest);
 			log.info("notify - Transfer credit alert sent to payee {}",transferCreditAlertResponse);
 		}
